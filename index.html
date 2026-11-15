@@ -1,0 +1,2045 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Pages — macOS & iOS Word Processor</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%23FF9F0A'/%3E%3Cstop offset='100%25' stop-color='%23FF375F'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Cpath d='M20 18h16l10 10v18a4 4 0 0 1-4 4H20a4 4 0 0 1-4-4V22a4 4 0 0 1 4-4z' fill='%23FFFFFF'/%3E%3Cpath d='M36 18v10h10' fill='none' stroke='%23FF9F0A' stroke-width='2.5' stroke-linejoin='round'/%3E%3Crect x='22' y='34' width='18' height='2.8' rx='1.4' fill='%23FF9F0A'/%3E%3Crect x='22' y='40' width='13' height='2.8' rx='1.4' fill='%23FF9F0A'/%3E%3C/svg%3E" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: [
+              '-apple-system',
+              'BlinkMacSystemFont',
+              '"SF Pro Text"',
+              '"SF Pro Display"',
+              'system-ui',
+              'Helvetica Neue',
+              'Arial',
+              'sans-serif'
+            ],
+            serif: [
+              '"New York"',
+              'Iowan Old Style',
+              'Georgia',
+              'Times New Roman',
+              'serif'
+            ],
+            mono: [
+              '"SF Mono"',
+              'ui-monospace',
+              'SFMono-Regular',
+              'Menlo',
+              'Monaco',
+              'Consolas',
+              'monospace'
+            ]
+          }
+        }
+      }
+    };
+  </script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --font-apple-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
+      --font-apple-serif: "New York", Iowan Old Style, Georgia, serif;
+      --font-apple-mono: "SF Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+
+    * {
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      font-family: var(--font-apple-sans);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overscroll-behavior-y: none;
+    }
+
+    /* Apple Frosted Glassmorphism */
+    .apple-glass {
+      background: rgba(255, 255, 255, 0.84);
+      backdrop-filter: blur(22px) saturate(180%);
+      -webkit-backdrop-filter: blur(22px) saturate(180%);
+      border-color: rgba(0, 0, 0, 0.08);
+    }
+
+    .dark .apple-glass {
+      background: rgba(28, 28, 30, 0.84);
+      backdrop-filter: blur(22px) saturate(180%);
+      -webkit-backdrop-filter: blur(22px) saturate(180%);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Hide scrollbars cleanly while preserving scrollability */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Subtle macOS scrollbars */
+    .apple-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .apple-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .apple-scroll::-webkit-scrollbar-thumb {
+      background: rgba(142, 142, 147, 0.35);
+      border-radius: 9999px;
+    }
+    .apple-scroll::-webkit-scrollbar-thumb:hover {
+      background: rgba(142, 142, 147, 0.55);
+    }
+
+    /* Document Paper Sheet */
+    .document-sheet {
+      width: 100%;
+      max-width: 816px;
+      min-height: 1056px;
+      background-color: #FFFFFF;
+      color: #1D1D1F;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+      transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.2s ease, color 0.2s ease;
+      transform-origin: top center;
+    }
+
+    .dark .document-sheet {
+      background-color: #1C1C1E;
+      color: #F5F5F7;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+
+    /* High-Contrast Typing Caret & Custom SVG I-Beam Cursor on White & Dark Pages */
+    #editor {
+      outline: none;
+      min-height: 820px;
+      -webkit-user-select: text !important;
+      user-select: text !important;
+      font-family: var(--font-apple-sans);
+      font-size: 16px;
+      line-height: 1.65;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      caret-color: #007AFF !important;
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M8 4h8M12 4v16M8 20h8' stroke='%23FFFFFF' stroke-width='4.2' stroke-linecap='round'/%3E%3Cpath d='M8 4h8M12 4v16M8 20h8' stroke='%23007AFF' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") 12 12, text;
+    }
+
+    .dark #editor {
+      caret-color: #0A84FF !important;
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M8 4h8M12 4v16M8 20h8' stroke='%23000000' stroke-width='4.2' stroke-linecap='round'/%3E%3Cpath d='M8 4h8M12 4v16M8 20h8' stroke='%230A84FF' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") 12 12, text;
+    }
+
+    input[type="text"],
+    input[type="search"],
+    textarea {
+      caret-color: #007AFF !important;
+    }
+
+    .dark input[type="text"],
+    .dark input[type="search"],
+    .dark textarea {
+      caret-color: #0A84FF !important;
+    }
+
+    #editor:empty:before {
+      content: attr(data-placeholder);
+      color: #8E8E93;
+      pointer-events: none;
+      display: block;
+    }
+
+    #editor h1 {
+      font-size: 2em;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      margin-top: 0.6em;
+      margin-bottom: 0.35em;
+      line-height: 1.2;
+    }
+
+    #editor h2 {
+      font-size: 1.45em;
+      font-weight: 600;
+      letter-spacing: -0.015em;
+      margin-top: 0.75em;
+      margin-bottom: 0.3em;
+      line-height: 1.3;
+    }
+
+    #editor h3 {
+      font-size: 1.2em;
+      font-weight: 600;
+      margin-top: 0.65em;
+      margin-bottom: 0.25em;
+      line-height: 1.35;
+    }
+
+    #editor p {
+      margin-bottom: 0.75em;
+    }
+
+    #editor ul {
+      list-style-type: disc;
+      padding-left: 1.6em;
+      margin-bottom: 0.8em;
+    }
+
+    #editor ol {
+      list-style-type: decimal;
+      padding-left: 1.6em;
+      margin-bottom: 0.8em;
+    }
+
+    #editor blockquote {
+      border-left: 3px solid #007AFF;
+      padding-left: 1em;
+      margin: 1em 0;
+      color: #6E6E73;
+      font-style: italic;
+    }
+
+    .dark #editor blockquote {
+      border-left-color: #0A84FF;
+      color: #98989D;
+    }
+
+    #editor hr {
+      border: none;
+      border-top: 1.5px solid rgba(142, 142, 147, 0.45);
+      margin: 1.5em 0;
+    }
+
+    #editor table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.25em 0;
+      font-size: 0.95em;
+    }
+
+    #editor th,
+    #editor td {
+      border: 1px solid rgba(142, 142, 147, 0.45);
+      padding: 8px 12px;
+      min-width: 64px;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    #editor th {
+      background-color: rgba(0, 122, 255, 0.08);
+      font-weight: 600;
+    }
+
+    .dark #editor th {
+      background-color: rgba(10, 132, 255, 0.16);
+    }
+
+    /* Active Toolbar Button */
+    .tool-btn.active {
+      background-color: rgba(0, 122, 255, 0.14);
+      color: #007AFF;
+    }
+
+    .dark .tool-btn.active {
+      background-color: rgba(10, 132, 255, 0.24);
+      color: #0A84FF;
+    }
+
+    /* Gentle Floating Animation for Desktop Corner Images */
+    @keyframes appleFloat {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+    }
+    .animate-apple-float {
+      animation: appleFloat 5s ease-in-out infinite;
+    }
+
+    /* Chakra Loader Rotation */
+    @keyframes chakraSpin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .animate-chakra-spin {
+      animation: chakraSpin 2.4s linear infinite;
+    }
+
+    /* Print Styling */
+    @media print {
+      body {
+        background: #FFFFFF !important;
+        color: #000000 !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      #workspace-scroll {
+        overflow: visible !important;
+        padding: 0 !important;
+        background: #FFFFFF !important;
+      }
+      .document-sheet {
+        box-shadow: none !important;
+        transform: none !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        min-height: auto !important;
+        padding: 0 !important;
+        background: #FFFFFF !important;
+        color: #000000 !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-[#F5F5F7] text-[#1D1D1F] dark:bg-[#000000] dark:text-[#F5F5F7] h-screen flex flex-col overflow-hidden select-none">
+
+  <!-- 0. CHAKRA LOADING OVERLAY (chakra.png) -->
+  <div id="chakra-loader" class="no-print fixed inset-0 z-[70] apple-glass flex flex-col items-center justify-center gap-3 transition-opacity duration-300">
+    <div class="relative flex items-center justify-center">
+      <img src="chakra.png" alt="Loading" onerror="this.style.display='none'"
+        class="w-20 h-20 sm:w-24 sm:h-24 object-contain bg-transparent border-0 shadow-none animate-chakra-spin mix-blend-multiply dark:mix-blend-normal" />
+    </div>
+    <span id="chakra-loader-text" class="text-xs font-medium tracking-wide text-gray-600 dark:text-gray-300">Loading...</span>
+  </div>
+
+  <!-- 1. STEALTH "PAGE NOT FOUND" LOGIN GATE -->
+  <div id="stealth-login-screen" class="fixed inset-0 z-50 bg-white dark:bg-[#121212] text-[#202124] dark:text-[#E8EAED] flex items-center justify-center p-6 select-text">
+    <div class="max-w-lg w-full space-y-5">
+      <div class="w-12 h-12 text-[#5F6368] dark:text-[#9AA0A6]">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="w-12 h-12">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="9" y1="13" x2="15" y2="19"></line>
+          <line x1="15" y1="13" x2="9" y2="19"></line>
+        </svg>
+      </div>
+
+      <div class="space-y-2">
+        <h1 class="text-2xl sm:text-[26px] font-normal tracking-tight text-[#202124] dark:text-[#E8EAED]">
+          Page not found
+        </h1>
+        <p class="text-sm text-[#5F6368] dark:text-[#9AA0A6] leading-relaxed">
+          This site can’t be reached or the requested page is currently unavailable.
+        </p>
+      </div>
+
+      <div class="text-xs text-[#5F6368] dark:text-[#9AA0A6] space-y-1.5 pt-1">
+        <p>Try: <span id="login-live-time" class="font-mono text-[#5F6368] dark:text-[#9AA0A6]">08:30</span></p>
+        <ul class="list-disc pl-5 space-y-1">
+          <li>Checking the web address for typos</li>
+          <li>Checking the connection</li>
+          <li>Reloading the page later</li>
+        </ul>
+      </div>
+
+      <div class="pt-2 flex items-center justify-between">
+        <span class="text-[11px] font-mono tracking-wider uppercase text-[#80868B]">ERR_PAGE_NOT_FOUND</span>
+        <input id="stealth-pass-input" type="password" inputmode="numeric" maxlength="16" autocomplete="off" aria-label="Access"
+          class="w-24 bg-transparent text-transparent caret-transparent focus:outline-none text-right text-xs" />
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. TOP MACOS / IOS NAVIGATION HEADER -->
+  <header id="app-header" class="hidden no-print apple-glass border-b z-30 shrink-0">
+    <!-- Row 1: Window Controls, Navigation, Document Title & Actions -->
+    <div class="px-3 sm:px-5 h-12 sm:h-14 flex items-center justify-between gap-2">
+      <!-- Left: macOS Traffic Lights + Sidebar + Home + New Doc + Sheets Sync -->
+      <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+        <div class="hidden md:flex items-center gap-1.5 mr-1">
+          <span class="w-3 h-3 rounded-full bg-[#FF5F56] inline-block border border-black/10"></span>
+          <span class="w-3 h-3 rounded-full bg-[#FFBD2E] inline-block border border-black/10"></span>
+          <span class="w-3 h-3 rounded-full bg-[#27C93F] inline-block border border-black/10"></span>
+        </div>
+
+        <button id="btn-toggle-sidebar" title="Toggle Documents Sidebar" class="p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200 transition active:scale-95">
+          <i data-lucide="panel-left" class="w-4 h-4"></i>
+        </button>
+
+        <button id="btn-home-view" title="Home Launcher" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/15 text-gray-800 dark:text-gray-100 transition active:scale-95">
+          <i data-lucide="home" class="w-3.5 h-3.5 text-[#007AFF] dark:text-[#0A84FF]"></i>
+          <span>Home</span>
+        </button>
+
+        <button id="btn-new-doc-top" title="New Blank Document" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[#007AFF] hover:bg-[#0066D6] dark:bg-[#0A84FF] text-white shadow-xs transition active:scale-95">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+          <span class="hidden sm:inline">New</span>
+        </button>
+
+        <button id="btn-sheets-sync" title="Connect / Sync Google Sheets" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 transition active:scale-95">
+          <i data-lucide="sheet" class="w-3.5 h-3.5"></i>
+          <span id="sheets-status-label" class="hidden md:inline">Connect Sheets</span>
+        </button>
+      </div>
+
+      <!-- Center: Inline Editable Document Title & Save Status -->
+      <div id="header-doc-title-wrap" class="flex-1 max-w-md mx-auto flex flex-col items-center justify-center min-w-0">
+        <div class="flex items-center gap-1.5 w-full justify-center">
+          <i data-lucide="file-text" class="w-3.5 h-3.5 text-[#007AFF] dark:text-[#0A84FF] shrink-0 hidden xs:inline"></i>
+          <input id="doc-title-input" type="text" value="Welcome to Pages" aria-label="Document Title"
+            class="bg-transparent text-center font-semibold text-xs sm:text-sm tracking-tight text-gray-900 dark:text-gray-100 focus:outline-none focus:bg-black/5 dark:focus:bg-white/10 rounded-md px-2 py-0.5 truncate max-w-[170px] sm:max-w-[260px] transition" />
+        </div>
+        <span id="save-status" class="text-[10px] text-gray-400 dark:text-gray-500 leading-none mt-0.5">Saved to iCloud</span>
+      </div>
+
+      <!-- Right: Zoom, Appearance Toggle & Export -->
+      <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+        <div id="zoom-controls" class="hidden md:flex items-center bg-black/5 dark:bg-white/10 rounded-lg p-0.5 text-xs">
+          <button onclick="changeZoom(-0.1)" title="Zoom Out" class="p-1.5 rounded-md hover:bg-white/70 dark:hover:bg-white/10 transition">
+            <i data-lucide="minus" class="w-3.5 h-3.5"></i>
+          </button>
+          <button onclick="resetZoom()" id="zoom-label" title="Reset Zoom" class="px-2 py-1 font-medium tabular-nums">100%</button>
+          <button onclick="changeZoom(0.1)" title="Zoom In" class="p-1.5 rounded-md hover:bg-white/70 dark:hover:bg-white/10 transition">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+
+        <button id="btn-theme-toggle" title="Switch Light / Dark Mode" class="p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200 transition active:scale-95">
+          <i data-lucide="sun" class="w-4 h-4 hidden dark:block text-amber-400"></i>
+          <i data-lucide="moon" class="w-4 h-4 block dark:hidden text-gray-700"></i>
+        </button>
+
+        <!-- Profile Avatar (logo.png) -->
+        <button onclick="switchView('home')" title="Home Profile" class="w-8 h-8 rounded-full overflow-hidden border border-black/10 dark:border-white/15 bg-black/5 dark:bg-white/10 shrink-0 shadow-xs hover:ring-2 hover:ring-[#007AFF] transition active:scale-95">
+          <img src="logo.png" alt="Profile" onerror="this.style.display='none'" class="w-full h-full object-cover" />
+        </button>
+
+        <!-- Export Dropdown -->
+        <div class="relative">
+          <button id="btn-export-menu" title="Share & Export" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/15 text-gray-800 dark:text-gray-100 transition active:scale-95">
+            <i data-lucide="share" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">Export</span>
+          </button>
+          <div id="export-dropdown" class="hidden absolute right-0 mt-2 w-48 apple-glass border rounded-2xl shadow-xl py-1.5 z-50 text-xs">
+            <button onclick="exportPrintPDF()" class="w-full px-3.5 py-2 text-left flex items-center gap-2.5 hover:bg-[#007AFF] hover:text-white transition">
+              <i data-lucide="printer" class="w-3.5 h-3.5"></i> Print / Save as PDF
+            </button>
+            <button onclick="exportWordDoc()" class="w-full px-3.5 py-2 text-left flex items-center gap-2.5 hover:bg-[#007AFF] hover:text-white transition">
+              <i data-lucide="file-type" class="w-3.5 h-3.5"></i> Export Word (.doc)
+            </button>
+            <button onclick="exportPlainText()" class="w-full px-3.5 py-2 text-left flex items-center gap-2.5 hover:bg-[#007AFF] hover:text-white transition">
+              <i data-lucide="file-code" class="w-3.5 h-3.5"></i> Export Plain Text (.txt)
+            </button>
+            <div class="my-1 border-t border-black/5 dark:border-white/10"></div>
+            <button onclick="copyAllText()" class="w-full px-3.5 py-2 text-left flex items-center gap-2.5 hover:bg-[#007AFF] hover:text-white transition">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy All Text
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: Rich Text Formatting Ribbon (Visible in Editor View) -->
+    <div id="formatting-ribbon" class="hidden px-3 sm:px-5 py-1.5 border-t border-black/[0.06] dark:border-white/[0.08] flex items-center justify-start lg:justify-center gap-1 overflow-x-auto no-scrollbar">
+      <!-- Undo / Redo -->
+      <div class="flex items-center gap-0.5 shrink-0">
+        <button type="button" onmousedown="event.preventDefault()" onclick="execCmd('undo')" title="Undo" class="tool-btn p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition">
+          <i data-lucide="undo-2" class="w-4 h-4"></i>
+        </button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="execCmd('redo')" title="Redo" class="tool-btn p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition">
+          <i data-lucide="redo-2" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="h-4 w-[1px] bg-black/10 dark:bg-white/15 mx-1 shrink-0"></div>
+
+      <!-- Paragraph Style -->
+      <select id="select-block" onchange="formatBlock(this.value)" title="Paragraph Style"
+        class="bg-black/5 dark:bg-white/10 text-xs font-medium rounded-lg px-2 py-1.5 focus:outline-none cursor-pointer shrink-0">
+        <option value="p">Body</option>
+        <option value="h1">Title (H1)</option>
+        <option value="h2">Heading (H2)</option>
+        <option value="h3">Subheading (H3)</option>
+        <option value="blockquote">Quote</option>
+      </select>
+
+      <!-- Apple Font Family -->
+      <select id="select-font" onchange="changeFontFamily(this.value)" title="Font Family"
+        class="bg-black/5 dark:bg-white/10 text-xs font-medium rounded-lg px-2 py-1.5 focus:outline-none cursor-pointer shrink-0">
+        <option value='-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif'>SF Pro</option>
+        <option value='"New York", Iowan Old Style, Georgia, serif'>New York</option>
+        <option value='"SF Mono", ui-monospace, Menlo, monospace'>SF Mono</option>
+        <option value='Helvetica Neue, Arial, sans-serif'>Helvetica</option>
+      </select>
+
+      <!-- Font Size -->
+      <select id="select-size" onchange="changeFontSize(this.value)" title="Font Size"
+        class="bg-black/5 dark:bg-white/10 text-xs font-medium rounded-lg px-2 py-1.5 focus:outline-none cursor-pointer shrink-0">
+        <option value="12px">12 pt</option>
+        <option value="14px">14 pt</option>
+        <option value="16px" selected>16 pt</option>
+        <option value="18px">18 pt</option>
+        <option value="20px">20 pt</option>
+        <option value="24px">24 pt</option>
+        <option value="30px">30 pt</option>
+        <option value="36px">36 pt</option>
+      </select>
+
+      <div class="h-4 w-[1px] bg-black/10 dark:bg-white/15 mx-1 shrink-0"></div>
+
+      <!-- Inline Text Styles -->
+      <div class="flex items-center gap-0.5 shrink-0">
+        <button type="button" id="btn-bold" onmousedown="event.preventDefault()" onclick="execCmd('bold')" title="Bold" class="tool-btn p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition">
+          <i data-lucide="bold" class="w-4 h-4"></i>
+        </button>
+        <button type="button" id="btn-italic" onmousedown="event.preventDefault()" onclick="execCmd('italic')" title="Italic" class="tool-btn p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition">
+          <i data-lucide="italic" class="w-4 h-4"></i>
+        </button>
+        <button type="button" id="btn-underline" onmousedown="event.preventDefault()" onclick="execCmd('underline')" title="Underline" class="tool-btn p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition">
+          <i data-lucide="underline" class="w-4 h-4"></i>
+        </button>
+        <button type="button" id="btn-strike" onmousedown="event.preventDefault()" onclick="execCmd('strikeThrough')" title="Strikethrough" class="tool-btn p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition">
+          <i data-lucide="strikethrough" class="w-4 h-4"></i>
+        </button>
+        <button type="button" id="btn-sub" onmousedown="event.preventDefault()" onclick="execCmd('subscript')" title="Subscript" class="tool-btn p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition">
+          <i data-lucide="subscript" class="w-4 h-4"></i>
+        </button>
+        <button type="button" id="btn-sup" onmousedown="event.preventDefault()" onclick="execCmd('superscript')" title="Superscript" class="tool-btn p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition">
+          <i data-lucide="superscript" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="h-4 w-[1px] bg-black/10 dark:bg-white/15 mx-1 shrink-0"></div>
+
+      <!-- Text & Highlight Color -->
+      <div class="flex items-center gap-1 shrink-0">
+        <label title="Text Color" class="tool-btn p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer flex items-center gap-1">
+          <i data-lucide="baseline" class="w-4 h-4"></i>
+          <input type="color" value="#1D1D1F" oninput="execCmd('foreColor', this.value)" onchange="execCmd('foreColor', this.value)" class="w-4 h-4 rounded-sm border-0 bg-transparent cursor-pointer" />
+        </label>
+        <label title="Highlight Color" class="tool-btn p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer flex items-center gap-1">
+          <i data-lucide="highlighter" class="w-4 h-4"></i>
+          <input type="color" value="#FFE600" oninput="execCmd('hiliteColor', this.value)" onchange="execCmd('hiliteColor', this.value)" class="w-4 h-4 rounded-sm border-0 bg-transparent cursor-pointer" />
+        </label>
+      </div>
+
+      <div class="h-4 w-[1px] bg-black/10 dark:bg-white/15 mx-1 shrink-0"></div>
+
+      <!-- Alignment -->
+      <div class="flex items-center gap-0.5 shrink-0">
+        <button type="button" id="btn-align-left" onmousedown="event.preventDefault()" onclick="execCmd('justifyLeft')" title="Align Left" class="tool-btn p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition">
+          <i data-lucide="align-left" class="w-4 h-4"></i>
+        </button>
+        <button type="button" id="btn-align-center" onmousedown="event.preventDefault()" onclick="execCmd('justifyCenter')" title="Align Center" class="tool-btn p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition">
+          <i data-lucide="align-center" class="w-4 h-4"></i>
+        </button>
+        <button type="button" id="btn-align-right" onmousedown="event.preventDefault()" onclick="execCmd('justifyRight')" title="Align Right" class="tool-btn p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition">
+          <i data-lucide="align-right" class="w-4 h-4"></i>
+        </button>
+        <button type="button" id="btn-align-justify" onmousedown="event.preventDefault()" onclick="execCmd('justifyFull')" title="Justify" class="tool-btn p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition">
+          <i data-lucide="align-justify" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="h-4 w-[1px] bg-black/10 dark:bg-white/15 mx-1 shrink-0"></div>
+
+      <!-- Lists, Indent, Table, Divider & Clear -->
+      <div class="flex items-center gap-0.5 shrink-0">
+        <button type="button" id="btn-ul" onmousedown="event.preventDefault()" onclick="execCmd('insertUnorderedList')" title="Bulleted List" class="tool-btn p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition">
+          <i data-lucide="list" class="w-4 h-4"></i>
+        </button>
+        <button type="button" id="btn-ol" onmousedown="event.preventDefault()" onclick="execCmd('insertOrderedList')" title="Numbered List" class="tool-btn p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition">
+          <i data-lucide="list-ordered" class="w-4 h-4"></i>
+        </button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="execCmd('outdent')" title="Decrease Indent" class="tool-btn p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition">
+          <i data-lucide="outdent" class="w-4 h-4"></i>
+        </button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="execCmd('indent')" title="Increase Indent" class="tool-btn p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition">
+          <i data-lucide="indent" class="w-4 h-4"></i>
+        </button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="promptInsertTable()" title="Insert Table" class="tool-btn p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition">
+          <i data-lucide="table" class="w-4 h-4"></i>
+        </button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="insertHorizontalLine()" title="Insert Horizontal Line" class="tool-btn p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition">
+          <i data-lucide="separator-horizontal" class="w-4 h-4"></i>
+        </button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="execCmd('removeFormat')" title="Clear Formatting" class="tool-btn p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition">
+          <i data-lucide="eraser" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 3. HOME PAGE LAUNCHER VIEW (Default Landing Screen After Login) -->
+  <section id="home-view-container" class="hidden flex-1 overflow-y-auto apple-scroll px-4 sm:px-8 py-6 sm:py-10">
+    <div class="max-w-5xl mx-auto space-y-8 pb-20">
+      <!-- Frosted Hero Welcome Banner -->
+      <div class="apple-glass border rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div class="flex items-center gap-4 sm:gap-5">
+          <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-white/80 dark:border-white/15 shadow-md bg-gradient-to-br from-[#007AFF]/15 to-[#5856D6]/15 shrink-0 flex items-center justify-center">
+            <img src="logo.png" alt="Home Profile Picture" onerror="this.style.display='none'" class="w-full h-full object-cover" />
+          </div>
+          <div class="space-y-1.5">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#007AFF]/10 dark:bg-[#0A84FF]/20 text-[#007AFF] dark:text-[#0A84FF] text-xs font-semibold">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+              <span>iCloud Drive • Pages Workspace</span>
+            </div>
+            <h1 id="home-greeting" class="text-2xl sm:text-3xl font-bold tracking-tight">Welcome to Pages</h1>
+            <p id="home-live-clock" class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Ready to create</p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="px-4 py-2.5 rounded-2xl bg-black/5 dark:bg-white/10 text-center">
+            <div id="home-stat-docs" class="text-lg font-bold tabular-nums">1</div>
+            <div class="text-[11px] text-gray-500 dark:text-gray-400">Documents</div>
+          </div>
+          <div class="px-4 py-2.5 rounded-2xl bg-black/5 dark:bg-white/10 text-center">
+            <div id="home-stat-words" class="text-lg font-bold tabular-nums">0</div>
+            <div class="text-[11px] text-gray-500 dark:text-gray-400">Total Words</div>
+          </div>
+          <button id="btn-home-resume" class="px-5 py-3 rounded-2xl bg-[#007AFF] hover:bg-[#0066D6] dark:bg-[#0A84FF] text-white text-xs sm:text-sm font-semibold shadow-sm flex items-center gap-2 transition active:scale-95">
+            <i data-lucide="pen-line" class="w-4 h-4"></i>
+            <span>Resume Editing</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Start Templates -->
+      <div class="space-y-3">
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 px-1">Start a New Document</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          <button data-template="blank" class="template-card apple-glass border rounded-2xl p-4 text-left hover:border-[#007AFF] dark:hover:border-[#0A84FF] transition group active:scale-[0.98]">
+            <div class="w-10 h-10 rounded-xl bg-[#007AFF]/10 dark:bg-[#0A84FF]/20 text-[#007AFF] dark:text-[#0A84FF] flex items-center justify-center mb-3 group-hover:scale-105 transition">
+              <i data-lucide="file-plus-2" class="w-5 h-5"></i>
+            </div>
+            <div class="font-semibold text-sm">Blank Document</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Clean sheet</div>
+          </button>
+
+          <button data-template="notes" class="template-card apple-glass border rounded-2xl p-4 text-left hover:border-[#007AFF] dark:hover:border-[#0A84FF] transition group active:scale-[0.98]">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3 group-hover:scale-105 transition">
+              <i data-lucide="notebook-pen" class="w-5 h-5"></i>
+            </div>
+            <div class="font-semibold text-sm">Study Notes</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Structured outline</div>
+          </button>
+
+          <button data-template="proposal" class="template-card apple-glass border rounded-2xl p-4 text-left hover:border-[#007AFF] dark:hover:border-[#0A84FF] transition group active:scale-[0.98]">
+            <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-3 group-hover:scale-105 transition">
+              <i data-lucide="briefcase" class="w-5 h-5"></i>
+            </div>
+            <div class="font-semibold text-sm">Project Proposal</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Executive brief</div>
+          </button>
+
+          <button data-template="meeting" class="template-card apple-glass border rounded-2xl p-4 text-left hover:border-[#007AFF] dark:hover:border-[#0A84FF] transition group active:scale-[0.98]">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3 group-hover:scale-105 transition">
+              <i data-lucide="users" class="w-5 h-5"></i>
+            </div>
+            <div class="font-semibold text-sm">Meeting Minutes</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Agenda &amp; actions</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Recent Documents Grid -->
+      <div class="space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
+          <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Your Documents</h2>
+          <div class="relative w-full sm:w-64">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input id="home-search-input" type="search" placeholder="Search all documents..."
+              class="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl apple-glass border placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 transition" />
+          </div>
+        </div>
+        <div id="home-doc-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. WORD PROCESSOR WORKSPACE VIEW -->
+  <div id="editor-view-container" class="hidden flex-1 flex overflow-hidden relative">
+    <!-- Mobile Sidebar Backdrop -->
+    <div id="sidebar-backdrop" class="hidden fixed inset-0 bg-black/30 backdrop-blur-xs z-30 lg:hidden"></div>
+
+    <!-- iCloud Drive Documents Sidebar -->
+    <aside id="doc-sidebar" class="no-print fixed lg:static inset-y-0 left-0 z-40 w-72 apple-glass border-r flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-out">
+      <div class="p-3.5 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <i data-lucide="cloud" class="w-3.5 h-3.5 text-[#007AFF] dark:text-[#0A84FF]"></i>
+            <span>iCloud Drive</span>
+          </div>
+          <button id="btn-new-doc-sidebar" title="Create Document" class="p-1.5 rounded-lg bg-[#007AFF]/10 hover:bg-[#007AFF]/20 text-[#007AFF] dark:text-[#0A84FF] transition">
+            <i data-lucide="file-plus" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <div class="relative">
+          <i data-lucide="search" class="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+          <input id="sidebar-search" type="search" placeholder="Search documents..."
+            class="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-black/5 dark:bg-white/10 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 transition" />
+        </div>
+      </div>
+
+      <div id="doc-list" class="flex-1 overflow-y-auto apple-scroll px-2.5 pb-4 space-y-1"></div>
+
+      <div class="p-3 border-t border-black/[0.06] dark:border-white/[0.08] text-[11px] text-gray-400 flex items-center justify-between">
+        <span id="sidebar-doc-count">1 Document</span>
+        <span>Pages 14.2</span>
+      </div>
+    </aside>
+
+    <!-- Center Paper Canvas -->
+    <main id="workspace-scroll" class="flex-1 overflow-y-auto apple-scroll px-3 sm:px-8 md:px-12 py-6 sm:py-10 flex flex-col items-center">
+      <div id="paper-sheet" class="document-sheet rounded-2xl sm:rounded-3xl px-6 py-8 sm:px-14 sm:py-14 md:px-16 md:py-16 mb-20 select-text">
+        <div id="editor" contenteditable="true" spellcheck="true" data-placeholder="Start writing your story, notes, or report..."></div>
+      </div>
+    </main>
+
+    <!-- Floating Live Status Pill -->
+    <div class="no-print fixed bottom-3 left-1/2 -translate-x-1/2 lg:left-[calc(50%+9rem)] z-20 max-w-[94vw]">
+      <div class="apple-glass border shadow-lg rounded-full px-4 py-1.5 flex items-center gap-3 sm:gap-4 text-[11px] sm:text-xs font-medium text-gray-600 dark:text-gray-300 whitespace-nowrap">
+        <span id="stat-words">0 words</span>
+        <span class="opacity-30">•</span>
+        <span id="stat-chars">0 chars</span>
+        <span class="opacity-30 hidden sm:inline">•</span>
+        <span id="stat-read" class="hidden sm:inline">1 min read</span>
+        <span class="opacity-30">•</span>
+        <span id="stat-pages">Page 1 of 1</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. FLOATING BOTTOM-LEFT DESKTOP IMAGE (krishna.png) -->
+  <div id="desktop-floating-image" class="hidden no-print pointer-events-none select-none fixed bottom-0 left-0 m-0 p-0 -translate-x-[10%] z-50 animate-apple-float bg-transparent">
+    <img id="desktop-floating-img-tag" src="krishna.png" alt="Krishna" class="w-80 h-72 m-0 p-0 object-contain bg-transparent border-0 shadow-none mix-blend-multiply dark:mix-blend-normal" />
+  </div>
+
+  <!-- 5B. FLOATING BOTTOM-RIGHT DESKTOP IMAGE (radha.png) -->
+  <div id="desktop-floating-image-right" class="hidden no-print pointer-events-none select-none fixed bottom-0 right-0 m-0 p-0 translate-x-[10%] z-50 animate-apple-float bg-transparent">
+    <img id="desktop-floating-img-right-tag" src="radha.png" alt="Radha" class="w-80 h-72 m-0 p-0 object-contain bg-transparent border-0 shadow-none mix-blend-multiply dark:mix-blend-normal" />
+  </div>
+
+  <!-- 6. CUSTOM APPLE MODAL DIALOG -->
+  <div id="apple-modal" class="no-print hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+    <div class="apple-glass border rounded-3xl shadow-2xl max-w-sm w-full p-6 space-y-4">
+      <div class="space-y-1.5 text-center">
+        <h3 id="modal-title" class="text-base font-semibold tracking-tight">Confirm Action</h3>
+        <p id="modal-desc" class="text-xs text-gray-500 dark:text-gray-400">Are you sure you want to proceed?</p>
+      </div>
+      <div id="modal-input-wrap" class="hidden">
+        <input id="modal-input" type="text"
+          class="w-full px-3.5 py-2 text-sm rounded-xl bg-black/5 dark:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[#007AFF]" />
+      </div>
+      <div class="grid grid-cols-2 gap-2.5 pt-1">
+        <button id="modal-cancel" class="py-2 px-4 rounded-xl text-xs font-semibold bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/15 transition">
+          Cancel
+        </button>
+        <button id="modal-confirm" class="py-2 px-4 rounded-xl text-xs font-semibold bg-[#007AFF] hover:bg-[#0066D6] text-white transition">
+          Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. APPLE TOAST NOTIFICATION -->
+  <div id="apple-toast" class="no-print fixed top-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-2">
+    <div class="apple-glass border shadow-xl rounded-full px-4 py-2 flex items-center gap-2 text-xs font-medium">
+      <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500"></i>
+      <span id="toast-message">Action completed</span>
+    </div>
+  </div>
+
+  <!-- 8. GOOGLE SHEETS CONNECTION MODAL -->
+  <div id="sheets-modal" class="no-print hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+    <div class="apple-glass border rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+          <i data-lucide="sheet" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-semibold tracking-tight">Google Sheets Cloud Sync</h3>
+          <p class="text-[11px] text-gray-500 dark:text-gray-400">Paste your deployed Google Apps Script Web App URL</p>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-xs font-medium text-gray-600 dark:text-gray-300 block">Apps Script Web App URL</label>
+        <input id="sheets-url-input" type="url" placeholder="https://script.google.com/macros/s/.../exec"
+          class="w-full px-3.5 py-2 text-xs rounded-xl bg-black/5 dark:bg-white/10 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+        <p id="sheets-sync-info" class="text-[11px] text-gray-500 dark:text-gray-400">Not connected yet. Documents save locally until connected.</p>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-2">
+        <button id="sheets-pull-btn" type="button" class="py-2 px-3 rounded-xl text-xs font-semibold bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/15 transition">
+          Pull from Sheet
+        </button>
+        <div class="flex items-center gap-2 ml-auto">
+          <button id="sheets-close-btn" type="button" class="py-2 px-3.5 rounded-xl text-xs font-semibold bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/15 transition">
+            Close
+          </button>
+          <button id="sheets-save-btn" type="button" class="py-2 px-4 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition">
+            Save &amp; Sync Now
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Storage Keys
+    const STORAGE_KEY_DOCS = 'apple_pages_word_docs_v1';
+    const STORAGE_KEY_THEME = 'apple_pages_theme_v1';
+    const STORAGE_KEY_SHEETS_URL = 'apple_pages_sheets_webhook_v1';
+
+    // Optional: Hardcode your Google Apps Script Web App URL here if desired
+    const DEFAULT_GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyUqoSH0EbisstboD2Vq0PxKxNbMTrBVXB_QWsozY3BjNqmW61syC5Uq8NElTpIZOWZ/exec';
+    // Default floating corner PNG filenames
+    const CUSTOM_FLOATING_IMAGE_URL = 'krishna.png';
+    const CUSTOM_FLOATING_IMAGE_RIGHT_URL = 'radha.png';
+
+    // Auto-Logout Inactivity Duration: 5 minutes (300,000 ms)
+    const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000;
+
+    let isAuthenticated = false;
+    let typedBuffer = '';
+    let inactivityTimer = null;
+    let documents = [];
+    let activeDocId = null;
+    let savedSelection = null;
+    let saveTimer = null;
+    let sidebarOpenDesktop = true;
+    let currentView = 'home';
+    let currentZoom = 1.0;
+
+    const DEFAULT_DOCS = [
+      {
+        id: 'doc-welcome',
+        title: 'Welcome to Pages',
+        pinned: true,
+        updatedAt: Date.now(),
+        content: `
+          <h1>Welcome to Pages</h1>
+          <p style="color: #86868B; font-size: 15px;">Designed with native macOS &amp; iOS typography, fluid responsiveness, and distraction-free clarity.</p>
+          <hr>
+          <h2>Effortless Writing Across Every Screen</h2>
+          <p>Whether you are drafting an essay on your <b>MacBook Pro</b>, reviewing notes on an <b>iPad</b>, or making quick edits on your <b>iPhone</b>, your workspace adapts seamlessly to every viewport.</p>
+          <ul>
+            <li><b>Native Apple Typography:</b> Switch between <i>SF Pro</i>, <i>New York</i> serif, and <i>SF Mono</i> at any time.</li>
+            <li><b>Home Launcher &amp; Templates:</b> Tap <b>Home</b> in the top bar to browse templates or search all documents.</li>
+            <li><b>High-Contrast Caret &amp; Cursor:</b> Crisp blue typing caret and custom I-beam cursor remain clearly visible in both Light and Dark themes.</li>
+          </ul>
+          <blockquote>"Simplicity is about subtracting the obvious and adding the meaningful."</blockquote>
+          <p>Click anywhere on this page to begin editing, or tap <b>Home</b> to start from a template.</p>
+        `
+      },
+      {
+        id: 'doc-project-brief',
+        title: 'Q4 Product Design Brief',
+        pinned: false,
+        updatedAt: Date.now() - 3600000 * 5,
+        content: `
+          <h1>Q4 Product Design Brief</h1>
+          <p><b>Objective:</b> Deliver an ultra-responsive document creation suite with zero visual clutter and instant touch responsiveness.</p>
+          <h2>Key Milestones</h2>
+          <ol>
+            <li>Complete responsive ribbon layout for mobile viewports.</li>
+            <li>Refine frosted glass surface contrast for Light and Dark appearances.</li>
+            <li>Validate print and Word (.doc) document exports.</li>
+          </ol>
+        `
+      }
+    ];
+
+    const TEMPLATES = {
+      blank: {
+        title: 'Untitled Document',
+        content: '<p></p>'
+      },
+      notes: {
+        title: 'Study Notes',
+        content: `
+          <h1>Course &amp; Lecture Notes</h1>
+          <p style="color: #86868B; font-size: 14px;">Date: ${new Date().toLocaleDateString()} • Subject / Module</p>
+          <hr>
+          <h2>1. Core Concepts</h2>
+          <ul>
+            <li><b>Primary Principle:</b> Summarize the core theorem or idea here.</li>
+            <li><b>Key Terminology:</b> Define essential terms in your own words.</li>
+          </ul>
+          <h2>2. Detailed Breakdown</h2>
+          <p>Write structured explanations, formulas, or examples below.</p>
+          <blockquote>"Key insight or professor quote to remember for review."</blockquote>
+          <h2>3. Summary &amp; Action Items</h2>
+          <ol>
+            <li>Review practice problems 1–5</li>
+            <li>Summarize main takeaways in 3 sentences</li>
+          </ol>
+        `
+      },
+      proposal: {
+        title: 'Project Proposal',
+        content: `
+          <h1>Project Proposal</h1>
+          <p style="color: #86868B; font-size: 14px;">Prepared for Stakeholder Review • ${new Date().toLocaleDateString()}</p>
+          <hr>
+          <h2>Executive Overview</h2>
+          <p>Outline the opportunity, user need, and strategic impact of this initiative.</p>
+          <h2>Proposed Scope &amp; Deliverables</h2>
+          <ul>
+            <li><b>Phase 1 — Discovery &amp; Design:</b> Wireframes, user flows, and interactive prototype.</li>
+            <li><b>Phase 2 — Engineering &amp; QA:</b> Core implementation, responsive polish, and performance testing.</li>
+          </ul>
+          <h2>Success Metrics</h2>
+          <p>Define measurable outcomes, target adoption rates, and timeline milestones.</p>
+        `
+      },
+      meeting: {
+        title: 'Meeting Minutes',
+        content: `
+          <h1>Team Sync — Meeting Minutes</h1>
+          <p style="color: #86868B; font-size: 14px;">Date: ${new Date().toLocaleDateString()} • Attendees: Product, Design, Engineering</p>
+          <hr>
+          <h2>Agenda</h2>
+          <ol>
+            <li>Sprint progress &amp; milestone review</li>
+            <li>Design feedback &amp; upcoming priorities</li>
+          </ol>
+          <h2>Key Decisions</h2>
+          <ul>
+            <li>Approved final typography and responsive layout specifications.</li>
+          </ul>
+          <h2>Action Items</h2>
+          <ul>
+            <li><b>@Design:</b> Share updated component specs by Friday.</li>
+            <li><b>@Engineering:</b> Complete release build verification.</li>
+          </ul>
+        `
+      }
+    };
+
+    const editor = document.getElementById('editor');
+    const docTitleInput = document.getElementById('doc-title-input');
+    const docListEl = document.getElementById('doc-list');
+    const paperSheet = document.getElementById('paper-sheet');
+
+    // Compute Dynamic Time-Based Password: {MM}30{HH} (e.g., 08:30 -> 303008)
+    function getDynamicPasscodes() {
+      const now = new Date();
+      const hh24 = String(now.getHours()).padStart(2, '0');
+      const hh12Num = now.getHours() % 12 || 12;
+      const hh12 = String(hh12Num).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      return [`${mm}30${hh24}`, `${mm}30${hh12}`];
+    }
+
+    // Update Live Time on Login Screen ("Try: HH:MM") & Home Screen
+    function updateAllClocks() {
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+
+      const loginTimeEl = document.getElementById('login-live-time');
+      if (loginTimeEl) {
+        loginTimeEl.textContent = `${hh}:${mm}`;
+      }
+
+      const hour = now.getHours();
+      const greeting = hour < 12 ? 'Good Morning' : hour < 18 ? 'Good Afternoon' : 'Good Evening';
+      const greetingEl = document.getElementById('home-greeting');
+      const clockEl = document.getElementById('home-live-clock');
+      if (greetingEl) greetingEl.textContent = `${greeting} — Welcome to Pages`;
+      if (clockEl) {
+        clockEl.textContent = now.toLocaleDateString(undefined, {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric'
+        }) + ' • ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      }
+    }
+
+    // Initialize Application
+    function init() {
+      showLoader('Loading...');
+      initTheme();
+      initCornerImage();
+      loadDocuments();
+      if (documents.length === 0) {
+        documents = JSON.parse(JSON.stringify(DEFAULT_DOCS));
+        saveToStorage();
+      }
+      openDocument(documents[0].id);
+      updateAllClocks();
+      setInterval(updateAllClocks, 1000);
+      initStealthLogin();
+      initInactivityMonitor();
+      bindEvents();
+      updateSheetsBadge();
+      if (getSheetsUrl()) {
+        pullFromGoogleSheets(true);
+      }
+      lucide.createIcons();
+      setTimeout(() => hideLoader(), 550);
+    }
+
+    // Chakra Loader Controls
+    function showLoader(text = 'Loading...') {
+      const loader = document.getElementById('chakra-loader');
+      const label = document.getElementById('chakra-loader-text');
+      if (label) label.textContent = text;
+      if (loader) {
+        loader.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
+      }
+    }
+
+    function hideLoader() {
+      const loader = document.getElementById('chakra-loader');
+      if (!loader) return;
+      loader.classList.add('opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        loader.classList.add('hidden');
+      }, 280);
+    }
+
+    // Theme & Appearance
+    function initTheme() {
+      const savedTheme = localStorage.getItem(STORAGE_KEY_THEME);
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem(STORAGE_KEY_THEME, isDark ? 'dark' : 'light');
+      showToast(isDark ? 'Dark Appearance' : 'Light Appearance');
+    }
+
+    // Floating Bottom-Left & Bottom-Right Desktop Image Setup
+    function initCornerImage() {
+      const imgEl = document.getElementById('desktop-floating-img-tag');
+      if (imgEl && CUSTOM_FLOATING_IMAGE_URL) {
+        imgEl.src = CUSTOM_FLOATING_IMAGE_URL;
+      }
+      const imgRightEl = document.getElementById('desktop-floating-img-right-tag');
+      if (imgRightEl && CUSTOM_FLOATING_IMAGE_RIGHT_URL) {
+        imgRightEl.src = CUSTOM_FLOATING_IMAGE_RIGHT_URL;
+      }
+    }
+
+    // Stealth "Page Not Found" Passcode Gate ({MM}30{HH})
+    function initStealthLogin() {
+      const loginScreen = document.getElementById('stealth-login-screen');
+      const passInput = document.getElementById('stealth-pass-input');
+
+      const checkUnlock = (candidate) => {
+        if (isAuthenticated) return;
+        const validCodes = getDynamicPasscodes();
+        if (validCodes.some(code => candidate.endsWith(code))) {
+          unlockApplication();
+        }
+      };
+
+      loginScreen.addEventListener('click', () => {
+        if (!isAuthenticated && passInput) passInput.focus();
+      });
+
+      if (passInput) {
+        passInput.addEventListener('input', () => {
+          const val = passInput.value.replace(/\D/g, '');
+          checkUnlock(val);
+          if (val.length > 12) passInput.value = val.slice(-8);
+        });
+      }
+
+      document.addEventListener('keydown', (e) => {
+        if (isAuthenticated) return;
+        if (/^[0-9]$/.test(e.key)) {
+          typedBuffer = (typedBuffer + e.key).slice(-12);
+          checkUnlock(typedBuffer);
+        } else if (e.key === 'Backspace') {
+          typedBuffer = typedBuffer.slice(0, -1);
+        }
+      });
+    }
+
+    // 5-Minute Inactivity Monitor (Cursor, Click, Keypress, Scroll, Touch)
+    function resetInactivityTimer() {
+      clearTimeout(inactivityTimer);
+      if (!isAuthenticated) return;
+      inactivityTimer = setTimeout(() => {
+        lockApplication();
+      }, INACTIVITY_TIMEOUT_MS);
+    }
+
+    function initInactivityMonitor() {
+      const activityEvents = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'pointermove'];
+      activityEvents.forEach(evt => {
+        window.addEventListener(evt, resetInactivityTimer, { passive: true });
+      });
+    }
+
+    function lockApplication() {
+      if (!isAuthenticated) return;
+      saveActiveDocument();
+      isAuthenticated = false;
+      typedBuffer = '';
+      clearTimeout(inactivityTimer);
+
+      const passInput = document.getElementById('stealth-pass-input');
+      if (passInput) passInput.value = '';
+
+      document.getElementById('app-header').classList.add('hidden');
+      document.getElementById('home-view-container').classList.add('hidden');
+      document.getElementById('editor-view-container').classList.add('hidden');
+      document.getElementById('sheets-modal').classList.add('hidden');
+      document.getElementById('apple-modal').classList.add('hidden');
+
+      const floatingImg = document.getElementById('desktop-floating-image');
+      if (floatingImg) {
+        floatingImg.classList.add('hidden');
+        floatingImg.classList.remove('lg:block');
+      }
+
+      const floatingImgRight = document.getElementById('desktop-floating-image-right');
+      if (floatingImgRight) {
+        floatingImgRight.classList.add('hidden');
+        floatingImgRight.classList.remove('lg:block');
+      }
+
+      document.getElementById('stealth-login-screen').classList.remove('hidden');
+    }
+
+    function unlockApplication() {
+      showLoader('Opening Workspace...');
+      isAuthenticated = true;
+      typedBuffer = '';
+      const passInput = document.getElementById('stealth-pass-input');
+      if (passInput) passInput.value = '';
+
+      document.getElementById('stealth-login-screen').classList.add('hidden');
+      document.getElementById('app-header').classList.remove('hidden');
+
+      const floatingImg = document.getElementById('desktop-floating-image');
+      if (floatingImg) {
+        floatingImg.classList.remove('hidden');
+        floatingImg.classList.add('hidden', 'lg:block');
+      }
+
+      const floatingImgRight = document.getElementById('desktop-floating-image-right');
+      if (floatingImgRight) {
+        floatingImgRight.classList.remove('hidden');
+        floatingImgRight.classList.add('hidden', 'lg:block');
+      }
+
+      resetInactivityTimer();
+      switchView('home');
+      setTimeout(() => {
+        hideLoader();
+        showToast('Unlocked Pages Workspace');
+      }, 450);
+    }
+
+    // View Switcher (Home Launcher vs Word Processor Editor)
+    function switchView(view) {
+      currentView = view;
+      const homeView = document.getElementById('home-view-container');
+      const editorView = document.getElementById('editor-view-container');
+      const ribbon = document.getElementById('formatting-ribbon');
+      const titleWrap = document.getElementById('header-doc-title-wrap');
+      const zoomWrap = document.getElementById('zoom-controls');
+
+      if (view === 'home') {
+        saveActiveDocument();
+        homeView.classList.remove('hidden');
+        editorView.classList.add('hidden');
+        ribbon.classList.add('hidden');
+        titleWrap.classList.add('invisible');
+        zoomWrap.classList.add('lg:hidden');
+        renderHomeView();
+      } else {
+        homeView.classList.add('hidden');
+        editorView.classList.remove('hidden');
+        ribbon.classList.remove('hidden');
+        titleWrap.classList.remove('invisible');
+        zoomWrap.classList.remove('lg:hidden');
+        updateStats();
+        setTimeout(() => editor.focus(), 50);
+      }
+      lucide.createIcons();
+    }
+
+    // Storage Persistence & Sidebar Rendering
+    function loadDocuments() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY_DOCS);
+        documents = raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        documents = [];
+      }
+    }
+
+    function saveToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY_DOCS, JSON.stringify(documents));
+      } catch (e) {
+        console.warn('LocalStorage save failed:', e);
+      }
+    }
+
+    function scheduleSave() {
+      const statusEl = document.getElementById('save-status');
+      if (statusEl) statusEl.textContent = 'Saving...';
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        saveActiveDocument();
+      }, 500);
+    }
+
+    function renderSidebar() {
+      const searchEl = document.getElementById('sidebar-search');
+      const query = (searchEl ? searchEl.value : '').toLowerCase().trim();
+      const sorted = [...documents]
+        .filter(d => d.title.toLowerCase().includes(query) || stripHtml(d.content).toLowerCase().includes(query))
+        .sort((a, b) => (b.pinned === a.pinned ? b.updatedAt - a.updatedAt : b.pinned ? 1 : -1));
+
+      docListEl.innerHTML = sorted.map(doc => {
+        const isActive = doc.id === activeDocId;
+        const snippet = stripHtml(doc.content).trim().slice(0, 48) || 'Empty document';
+        return `
+          <div onclick="openDocument('${doc.id}')"
+            class="group px-3 py-2.5 rounded-xl cursor-pointer transition flex items-start justify-between gap-2 ${
+              isActive
+                ? 'bg-[#007AFF] dark:bg-[#0A84FF] text-white shadow-xs'
+                : 'hover:bg-black/5 dark:hover:bg-white/10 text-gray-800 dark:text-gray-200'
+            }">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-1.5">
+                ${doc.pinned ? `<i data-lucide="pin" class="w-3 h-3 shrink-0 opacity-85"></i>` : ''}
+                <span class="text-xs font-semibold truncate">${escapeHtml(doc.title)}</span>
+              </div>
+              <p class="text-[11px] truncate mt-0.5 ${isActive ? 'text-white/80' : 'text-gray-400'}">${escapeHtml(snippet)}</p>
+              <span class="text-[10px] mt-1 block ${isActive ? 'text-white/70' : 'text-gray-400'}">${formatRelativeDate(doc.updatedAt)}</span>
+            </div>
+            <div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition shrink-0">
+              <button onclick="togglePinDocument('${doc.id}', event)" title="Pin" class="p-1 rounded-md hover:bg-black/15">
+                <i data-lucide="pin" class="w-3 h-3"></i>
+              </button>
+              <button onclick="renameDocumentPrompt('${doc.id}', event)" title="Rename" class="p-1 rounded-md hover:bg-black/15">
+                <i data-lucide="pencil" class="w-3 h-3"></i>
+              </button>
+              <button onclick="deleteDocument('${doc.id}', event)" title="Delete" class="p-1 rounded-md hover:bg-red-500/80">
+                <i data-lucide="trash-2" class="w-3 h-3"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const countEl = document.getElementById('sidebar-doc-count');
+      if (countEl) {
+        countEl.textContent = `${documents.length} Document${documents.length === 1 ? '' : 's'}`;
+      }
+      lucide.createIcons();
+    }
+
+    function renderHomeView() {
+      const searchEl = document.getElementById('home-search-input');
+      const gridEl = document.getElementById('home-doc-grid');
+      if (!gridEl) return;
+
+      const query = (searchEl ? searchEl.value : '').toLowerCase().trim();
+      const totalWords = documents.reduce((acc, doc) => {
+        const txt = stripHtml(doc.content).trim();
+        return acc + (txt ? txt.split(/\s+/).length : 0);
+      }, 0);
+
+      document.getElementById('home-stat-docs').textContent = documents.length;
+      document.getElementById('home-stat-words').textContent = totalWords.toLocaleString();
+
+      const sorted = [...documents]
+        .filter(d => d.title.toLowerCase().includes(query) || stripHtml(d.content).toLowerCase().includes(query))
+        .sort((a, b) => (b.pinned === a.pinned ? b.updatedAt - a.updatedAt : b.pinned ? 1 : -1));
+
+      if (sorted.length === 0) {
+        gridEl.innerHTML = `<div class="col-span-full text-center py-12 text-xs text-gray-400">No documents match your search.</div>`;
+        return;
+      }
+
+      gridEl.innerHTML = sorted.map(doc => {
+        const plain = stripHtml(doc.content).trim();
+        const words = plain ? plain.split(/\s+/).length : 0;
+        const preview = plain.slice(0, 125) || 'Blank document — click to start writing...';
+        return `
+          <div onclick="openDocument('${doc.id}'); switchView('editor');"
+            class="group apple-glass border rounded-2xl p-5 cursor-pointer hover:border-[#007AFF] dark:hover:border-[#0A84FF] shadow-xs hover:shadow-md transition flex flex-col justify-between gap-4">
+            <div class="space-y-2">
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex items-center gap-2 min-w-0">
+                  <div class="w-8 h-8 rounded-xl bg-[#007AFF]/10 dark:bg-[#0A84FF]/20 text-[#007AFF] dark:text-[#0A84FF] flex items-center justify-center shrink-0">
+                    <i data-lucide="file-text" class="w-4 h-4"></i>
+                  </div>
+                  <h3 class="font-semibold text-sm truncate">${escapeHtml(doc.title)}</h3>
+                </div>
+                ${doc.pinned ? `<i data-lucide="pin" class="w-3.5 h-3.5 text-[#007AFF] dark:text-[#0A84FF] shrink-0"></i>` : ''}
+              </div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-3 leading-relaxed">${escapeHtml(preview)}</p>
+            </div>
+
+            <div class="pt-3 border-t border-black/[0.06] dark:border-white/[0.08] flex items-center justify-between text-[11px] text-gray-400">
+              <span>${formatRelativeDate(doc.updatedAt)} • ${words} words</span>
+              <div class="flex items-center gap-1">
+                <button onclick="togglePinDocument('${doc.id}', event)" title="${doc.pinned ? 'Unpin' : 'Pin'}"
+                  class="p-1.5 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 text-gray-500 dark:text-gray-300">
+                  <i data-lucide="pin" class="w-3.5 h-3.5"></i>
+                </button>
+                <button onclick="renameDocumentPrompt('${doc.id}', event)" title="Rename"
+                  class="p-1.5 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 text-gray-500 dark:text-gray-300">
+                  <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                </button>
+                <button onclick="deleteDocument('${doc.id}', event)" title="Delete"
+                  class="p-1.5 rounded-lg hover:bg-red-500/15 text-gray-500 hover:text-red-500">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+    // Document CRUD Operations
+    function openDocument(id) {
+      const doc = documents.find(d => d.id === id);
+      if (!doc) return;
+      activeDocId = doc.id;
+      docTitleInput.value = doc.title;
+      editor.innerHTML = doc.content;
+      updateStats();
+      renderSidebar();
+      closeMobileSidebar();
+    }
+
+    function createNewDocument(templateKey = 'blank') {
+      saveActiveDocument();
+      const tpl = TEMPLATES[templateKey] || TEMPLATES.blank;
+      const newDoc = {
+        id: 'doc-' + Date.now(),
+        title: tpl.title,
+        pinned: false,
+        updatedAt: Date.now(),
+        content: tpl.content
+      };
+      documents.unshift(newDoc);
+      saveToStorage();
+      openDocument(newDoc.id);
+      switchView('editor');
+      showToast(`Created "${newDoc.title}"`);
+    }
+
+    function deleteDocument(id, e) {
+      if (e) e.stopPropagation();
+      const target = documents.find(d => d.id === id);
+      if (!target) return;
+
+      openModal({
+        title: 'Delete Document',
+        desc: `Move "${target.title}" to Trash? This cannot be undone.`,
+        confirmText: 'Delete',
+        danger: true,
+        onConfirm: () => {
+          documents = documents.filter(d => d.id !== id);
+          if (getSheetsUrl()) deleteDocFromGoogleSheets(id);
+          if (documents.length === 0) {
+            documents.push({
+              id: 'doc-' + Date.now(),
+              title: 'Untitled Document',
+              pinned: false,
+              updatedAt: Date.now(),
+              content: '<p></p>'
+            });
+          }
+          saveToStorage();
+          if (activeDocId === id) {
+            openDocument(documents[0].id);
+          } else {
+            renderSidebar();
+          }
+          if (currentView === 'home') renderHomeView();
+          showToast('Document deleted');
+        }
+      });
+    }
+
+    function togglePinDocument(id, e) {
+      if (e) e.stopPropagation();
+      const doc = documents.find(d => d.id === id);
+      if (!doc) return;
+      doc.pinned = !doc.pinned;
+      saveToStorage();
+      renderSidebar();
+      if (currentView === 'home') renderHomeView();
+      if (getSheetsUrl()) pushDocToGoogleSheets(doc);
+      showToast(doc.pinned ? 'Document pinned' : 'Document unpinned');
+    }
+
+    function renameDocumentPrompt(id, e) {
+      if (e) e.stopPropagation();
+      const doc = documents.find(d => d.id === id);
+      if (!doc) return;
+      openModal({
+        title: 'Rename Document',
+        desc: 'Enter a new title for this document:',
+        inputValue: doc.title,
+        confirmText: 'Rename',
+        onConfirm: (newTitle) => {
+          const clean = (newTitle || '').trim();
+          if (!clean) return;
+          doc.title = clean;
+          doc.updatedAt = Date.now();
+          if (activeDocId === doc.id) {
+            docTitleInput.value = clean;
+          }
+          saveToStorage();
+          renderSidebar();
+          if (currentView === 'home') renderHomeView();
+          if (getSheetsUrl()) pushDocToGoogleSheets(doc);
+          showToast('Document renamed');
+        }
+      });
+    }
+
+    function saveActiveDocument() {
+      const doc = documents.find(d => d.id === activeDocId);
+      if (!doc) return;
+      doc.title = docTitleInput.value.trim() || 'Untitled Document';
+      doc.content = editor.innerHTML;
+      doc.updatedAt = Date.now();
+      saveToStorage();
+      renderSidebar();
+      if (currentView === 'home') renderHomeView();
+      const statusEl = document.getElementById('save-status');
+      if (statusEl) statusEl.textContent = getSheetsUrl() ? 'Syncing to Google Sheets...' : 'Saved to iCloud';
+      if (getSheetsUrl()) {
+        pushDocToGoogleSheets(doc);
+      }
+    }
+
+    // Google Sheets Integration Helpers
+    function getSheetsUrl() {
+      return (localStorage.getItem(STORAGE_KEY_SHEETS_URL) || DEFAULT_GOOGLE_SHEETS_URL || '').trim();
+    }
+
+    function updateSheetsBadge() {
+      const label = document.getElementById('sheets-status-label');
+      if (!label) return;
+      label.textContent = getSheetsUrl() ? 'Sheets Connected' : 'Connect Sheets';
+    }
+
+    async function pushDocToGoogleSheets(doc) {
+      const url = getSheetsUrl();
+      if (!url || !doc) return false;
+      const statusEl = document.getElementById('save-status');
+      const docPayload = {
+        id: doc.id,
+        title: doc.title,
+        pinned: Boolean(doc.pinned),
+        updatedAt: doc.updatedAt,
+        plainText: stripHtml(doc.content).trim(),
+        content: doc.content
+      };
+
+      try {
+        const formBody = new URLSearchParams();
+        formBody.set('payload', JSON.stringify({ action: 'upsert', doc: docPayload }));
+
+        const res = await fetch(url, {
+          method: 'POST',
+          body: formBody
+        });
+        const result = await res.json();
+        if (result && result.status === 'saved') {
+          if (statusEl) statusEl.textContent = 'Synced to Google Sheets';
+          return true;
+        }
+      } catch (err) {
+        try {
+          const encoded = encodeURIComponent(JSON.stringify(docPayload));
+          if (encoded.length < 7000) {
+            const getRes = await fetch(`${url}?action=upsert&payload=${encoded}&t=${Date.now()}`);
+            const getResult = await getRes.json();
+            if (getResult && getResult.status === 'saved') {
+              if (statusEl) statusEl.textContent = 'Synced to Google Sheets';
+              return true;
+            }
+          }
+        } catch (fallbackErr) {
+          console.warn('Google Sheets push error:', fallbackErr);
+        }
+      }
+      if (statusEl) statusEl.textContent = 'Sheet Sync Error — Check URL/Access';
+      return false;
+    }
+
+    async function deleteDocFromGoogleSheets(id) {
+      const url = getSheetsUrl();
+      if (!url || !id) return;
+      try {
+        const formBody = new URLSearchParams();
+        formBody.set('payload', JSON.stringify({ action: 'delete', id }));
+        await fetch(url, {
+          method: 'POST',
+          body: formBody
+        });
+      } catch (err) {
+        try {
+          await fetch(`${url}?action=delete&id=${encodeURIComponent(id)}&t=${Date.now()}`);
+        } catch (fallbackErr) {
+          console.warn('Google Sheets delete error:', fallbackErr);
+        }
+      }
+    }
+
+    async function pullFromGoogleSheets(silent = false) {
+      const url = getSheetsUrl();
+      if (!url) {
+        if (!silent) showToast('Enter a Google Apps Script URL first');
+        return;
+      }
+      try {
+        const res = await fetch(`${url}?action=list&t=${Date.now()}`);
+        const data = await res.json();
+        if (data && Array.isArray(data.docs)) {
+          if (data.docs.length > 0) {
+            documents = data.docs.map(d => ({
+              id: String(d.id),
+              title: String(d.title || 'Untitled Document'),
+              pinned: d.pinned === true || String(d.pinned).toLowerCase() === 'true',
+              updatedAt: Number(d.updatedAt) || Date.now(),
+              content: String(d.content || '<p></p>')
+            }));
+            saveToStorage();
+            const exists = documents.some(d => d.id === activeDocId);
+            openDocument(exists ? activeDocId : documents[0].id);
+            if (currentView === 'home') renderHomeView();
+            if (!silent) showToast(`Pulled ${documents.length} document(s) from Sheet`);
+          } else if (!silent) {
+            showToast('Sheet is empty — click Save & Sync Now to upload');
+          }
+        }
+      } catch (err) {
+        console.warn('Google Sheets pull error:', err);
+        if (!silent) showToast('Could not fetch from Google Sheets — check deployment');
+      }
+    }
+
+    // Selection & Rich-Text Formatting Commands
+    function saveSelection() {
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        if (editor.contains(range.commonAncestorContainer)) {
+          savedSelection = range.cloneRange();
+        }
+      }
+    }
+
+    function restoreSelection() {
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0 && editor.contains(sel.getRangeAt(0).commonAncestorContainer)) {
+        return;
+      }
+      if (savedSelection) {
+        sel.removeAllRanges();
+        sel.addRange(savedSelection);
+      } else {
+        const range = document.createRange();
+        range.selectNodeContents(editor);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    }
+
+    function execCmd(command, value = null) {
+      editor.focus();
+      restoreSelection();
+      try {
+        document.execCommand('styleWithCSS', false, true);
+      } catch (e) {}
+      if (command === 'hiliteColor') {
+        if (!document.execCommand('hiliteColor', false, value)) {
+          document.execCommand('backColor', false, value);
+        }
+      } else {
+        document.execCommand(command, false, value);
+      }
+      saveSelection();
+      updateToolbarState();
+      updateStats();
+      scheduleSave();
+    }
+
+    function formatBlock(tag) {
+      editor.focus();
+      restoreSelection();
+      document.execCommand('formatBlock', false, tag);
+      saveSelection();
+      updateToolbarState();
+      updateStats();
+      scheduleSave();
+    }
+
+    function changeFontFamily(font) {
+      execCmd('fontName', font);
+    }
+
+    function changeFontSize(sizePx) {
+      editor.focus();
+      restoreSelection();
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        if (!range.collapsed) {
+          const span = document.createElement('span');
+          span.style.fontSize = sizePx;
+          span.appendChild(range.extractContents());
+          range.insertNode(span);
+          sel.removeAllRanges();
+          const newRange = document.createRange();
+          newRange.selectNodeContents(span);
+          sel.addRange(newRange);
+        } else {
+          document.execCommand('fontSize', false, '4');
+          editor.querySelectorAll('font[size="4"]').forEach(el => {
+            el.removeAttribute('size');
+            el.style.fontSize = sizePx;
+          });
+        }
+      }
+      saveSelection();
+      updateStats();
+      scheduleSave();
+    }
+
+    function insertHorizontalLine() {
+      editor.focus();
+      restoreSelection();
+      document.execCommand('insertHTML', false, '<hr><p><br></p>');
+      saveSelection();
+      updateStats();
+      scheduleSave();
+    }
+
+    function promptInsertTable() {
+      saveSelection();
+      openModal({
+        title: 'Insert Table',
+        desc: 'Enter Rows x Columns (e.g. 3x3 or 4x2):',
+        inputValue: '3x3',
+        confirmText: 'Insert Table',
+        onConfirm: (val) => {
+          const parts = (val || '3x3').toLowerCase().split(/[x×,\s]+/);
+          const rows = Math.min(20, Math.max(1, parseInt(parts[0], 10) || 3));
+          const cols = Math.min(12, Math.max(1, parseInt(parts[1], 10) || 3));
+          insertTable(rows, cols);
+        }
+      });
+    }
+
+    function insertTable(rows, cols) {
+      editor.focus();
+      restoreSelection();
+      let html = '<table><thead><tr>';
+      for (let c = 0; c < cols; c++) {
+        html += `<th>Header ${c + 1}</th>`;
+      }
+      html += '</tr></thead><tbody>';
+      for (let r = 1; r < rows; r++) {
+        html += '<tr>';
+        for (let c = 0; c < cols; c++) {
+          html += '<td>Cell</td>';
+        }
+        html += '</tr>';
+      }
+      html += '</tbody></table><p><br></p>';
+      document.execCommand('insertHTML', false, html);
+      saveSelection();
+      updateStats();
+      scheduleSave();
+      showToast(`Inserted ${rows}×${cols} table`);
+    }
+
+    function updateToolbarState() {
+      const commands = [
+        { id: 'btn-bold', cmd: 'bold' },
+        { id: 'btn-italic', cmd: 'italic' },
+        { id: 'btn-underline', cmd: 'underline' },
+        { id: 'btn-strike', cmd: 'strikeThrough' },
+        { id: 'btn-sub', cmd: 'subscript' },
+        { id: 'btn-sup', cmd: 'superscript' },
+        { id: 'btn-align-left', cmd: 'justifyLeft' },
+        { id: 'btn-align-center', cmd: 'justifyCenter' },
+        { id: 'btn-align-right', cmd: 'justifyRight' },
+        { id: 'btn-align-justify', cmd: 'justifyFull' },
+        { id: 'btn-ul', cmd: 'insertUnorderedList' },
+        { id: 'btn-ol', cmd: 'insertOrderedList' }
+      ];
+
+      commands.forEach(({ id, cmd }) => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        try {
+          if (document.queryCommandState(cmd)) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        } catch (e) {
+          btn.classList.remove('active');
+        }
+      });
+    }
+
+    // Live Stats
+    function updateStats() {
+      const text = editor.innerText || '';
+      const trimmed = text.trim();
+      const words = trimmed ? trimmed.split(/\s+/).length : 0;
+      const chars = text.replace(/\n/g, '').length;
+      const readMins = Math.max(1, Math.ceil(words / 225));
+      const estPages = Math.max(1, Math.ceil(editor.scrollHeight / 1056));
+
+      document.getElementById('stat-words').textContent = `${words.toLocaleString()} word${words === 1 ? '' : 's'}`;
+      document.getElementById('stat-chars').textContent = `${chars.toLocaleString()} char${chars === 1 ? '' : 's'}`;
+      document.getElementById('stat-read').textContent = `${readMins} min read`;
+      document.getElementById('stat-pages').textContent = `Page 1 of ${estPages}`;
+    }
+
+    // Zoom Controls
+    function changeZoom(delta) {
+      currentZoom = Math.min(1.5, Math.max(0.7, +(currentZoom + delta).toFixed(2)));
+      applyZoom();
+    }
+
+    function resetZoom() {
+      currentZoom = 1.0;
+      applyZoom();
+    }
+
+    function applyZoom() {
+      if (paperSheet) {
+        paperSheet.style.transform = `scale(${currentZoom})`;
+      }
+      const zoomLabel = document.getElementById('zoom-label');
+      if (zoomLabel) {
+        zoomLabel.textContent = `${Math.round(currentZoom * 100)}%`;
+      }
+    }
+
+    // Responsive Sidebar Toggle
+    function toggleSidebar() {
+      const sidebar = document.getElementById('doc-sidebar');
+      const backdrop = document.getElementById('sidebar-backdrop');
+      const isDesktop = window.innerWidth >= 1024;
+
+      if (isDesktop) {
+        sidebarOpenDesktop = !sidebarOpenDesktop;
+        sidebar.classList.toggle('lg:hidden', !sidebarOpenDesktop);
+      } else {
+        const isClosed = sidebar.classList.contains('-translate-x-full');
+        if (isClosed) {
+          sidebar.classList.remove('-translate-x-full');
+          backdrop.classList.remove('hidden');
+        } else {
+          closeMobileSidebar();
+        }
+      }
+    }
+
+    function closeMobileSidebar() {
+      const sidebar = document.getElementById('doc-sidebar');
+      const backdrop = document.getElementById('sidebar-backdrop');
+      if (sidebar) sidebar.classList.add('-translate-x-full');
+      if (backdrop) backdrop.classList.add('hidden');
+    }
+
+    // Export Functions
+    function exportPrintPDF() {
+      document.getElementById('export-dropdown').classList.add('hidden');
+      window.print();
+    }
+
+    function exportWordDoc() {
+      document.getElementById('export-dropdown').classList.add('hidden');
+      const title = (docTitleInput.value.trim() || 'Document').replace(/[^\w\s-]/g, '');
+      const htmlContent = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head><meta charset='utf-8'><title>${escapeHtml(title)}</title></head>
+        <body style="font-family: -apple-system, Helvetica, Arial, sans-serif; line-height: 1.6;">
+          ${editor.innerHTML}
+        </body>
+        </html>
+      `;
+      downloadBlob(new Blob(['\ufeff', htmlContent], { type: 'application/msword' }), `${title}.doc`);
+      showToast(`Exported ${title}.doc`);
+    }
+
+    function exportPlainText() {
+      document.getElementById('export-dropdown').classList.add('hidden');
+      const title = (docTitleInput.value.trim() || 'Document').replace(/[^\w\s-]/g, '');
+      downloadBlob(new Blob([editor.innerText || ''], { type: 'text/plain;charset=utf-8' }), `${title}.txt`);
+      showToast(`Exported ${title}.txt`);
+    }
+
+    function copyAllText() {
+      document.getElementById('export-dropdown').classList.add('hidden');
+      const temp = document.createElement('textarea');
+      temp.value = editor.innerText || '';
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand('copy');
+      document.body.removeChild(temp);
+      showToast('Copied document text to clipboard');
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // Custom Apple Modal Dialog
+    function openModal({ title, desc, inputValue = null, confirmText = 'Confirm', danger = false, onConfirm }) {
+      const modal = document.getElementById('apple-modal');
+      const titleEl = document.getElementById('modal-title');
+      const descEl = document.getElementById('modal-desc');
+      const inputWrap = document.getElementById('modal-input-wrap');
+      const inputEl = document.getElementById('modal-input');
+      const cancelBtn = document.getElementById('modal-cancel');
+      const confirmBtn = document.getElementById('modal-confirm');
+
+      titleEl.textContent = title;
+      descEl.textContent = desc;
+      confirmBtn.textContent = confirmText;
+      confirmBtn.className = `py-2 px-4 rounded-xl text-xs font-semibold text-white transition ${
+        danger ? 'bg-red-500 hover:bg-red-600' : 'bg-[#007AFF] hover:bg-[#0066D6]'
+      }`;
+
+      if (inputValue !== null) {
+        inputWrap.classList.remove('hidden');
+        inputEl.value = inputValue;
+      } else {
+        inputWrap.classList.add('hidden');
+      }
+
+      modal.classList.remove('hidden');
+      if (inputValue !== null) {
+        setTimeout(() => {
+          inputEl.focus();
+          inputEl.select();
+        }, 40);
+      }
+
+      const close = () => {
+        modal.classList.add('hidden');
+        cancelBtn.onclick = null;
+        confirmBtn.onclick = null;
+      };
+
+      cancelBtn.onclick = close;
+      confirmBtn.onclick = () => {
+        const val = inputValue !== null ? inputEl.value : true;
+        close();
+        if (onConfirm) onConfirm(val);
+      };
+    }
+
+    // Toast Notification
+    let toastTimeout = null;
+    function showToast(msg) {
+      const toast = document.getElementById('apple-toast');
+      const msgEl = document.getElementById('toast-message');
+      if (!toast || !msgEl) return;
+      msgEl.textContent = msg;
+      toast.classList.remove('opacity-0', '-translate-y-2');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('opacity-0', '-translate-y-2');
+        toast.classList.remove('opacity-100', 'translate-y-0');
+      }, 2200);
+    }
+
+    // Utility Helpers
+    function stripHtml(html) {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = html || '';
+      return tmp.textContent || tmp.innerText || '';
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function formatRelativeDate(ts) {
+      const diff = Math.floor((Date.now() - ts) / 1000);
+      if (diff < 60) return 'Just now';
+      if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+      if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+      return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    }
+
+    // Event Listeners
+    function bindEvents() {
+      document.getElementById('btn-new-doc-top').addEventListener('click', () => createNewDocument('blank'));
+      document.getElementById('btn-new-doc-sidebar').addEventListener('click', () => createNewDocument('blank'));
+
+      document.getElementById('btn-home-view').addEventListener('click', () => {
+        switchView(currentView === 'home' ? 'editor' : 'home');
+      });
+      document.getElementById('btn-home-resume').addEventListener('click', () => switchView('editor'));
+      document.getElementById('home-search-input').addEventListener('input', renderHomeView);
+      document.querySelectorAll('.template-card').forEach(card => {
+        card.addEventListener('click', () => createNewDocument(card.dataset.template));
+      });
+
+      document.getElementById('btn-theme-toggle').addEventListener('click', toggleTheme);
+      document.getElementById('btn-toggle-sidebar').addEventListener('click', toggleSidebar);
+      document.getElementById('sidebar-backdrop').addEventListener('click', closeMobileSidebar);
+      document.getElementById('sidebar-search').addEventListener('input', renderSidebar);
+      docTitleInput.addEventListener('input', scheduleSave);
+
+      // Google Sheets Sync Modal Controls
+      const sheetsModal = document.getElementById('sheets-modal');
+      const sheetsUrlInput = document.getElementById('sheets-url-input');
+      const sheetsInfo = document.getElementById('sheets-sync-info');
+
+      document.getElementById('btn-sheets-sync').addEventListener('click', () => {
+        sheetsUrlInput.value = getSheetsUrl();
+        sheetsInfo.textContent = getSheetsUrl()
+          ? 'Connected! Every edit auto-syncs to your Google Sheet.'
+          : 'Paste your Web App URL below to sync documents with Google Sheets.';
+        sheetsModal.classList.remove('hidden');
+      });
+
+      document.getElementById('sheets-close-btn').addEventListener('click', () => {
+        sheetsModal.classList.add('hidden');
+      });
+
+      document.getElementById('sheets-save-btn').addEventListener('click', async () => {
+        const val = sheetsUrlInput.value.trim();
+        localStorage.setItem(STORAGE_KEY_SHEETS_URL, val);
+        updateSheetsBadge();
+        sheetsModal.classList.add('hidden');
+        if (val) {
+          showLoader('Syncing with Google Sheets...');
+          saveActiveDocument();
+          let syncedCount = 0;
+          for (const d of documents) {
+            const ok = await pushDocToGoogleSheets(d);
+            if (ok) syncedCount++;
+          }
+          hideLoader();
+          if (syncedCount > 0) {
+            showToast(`Synced ${syncedCount} document(s) to Google Sheets`);
+          } else {
+            showToast('Sync failed — verify Apps Script is deployed as Anyone');
+          }
+        } else {
+          showToast('Disconnected Google Sheets');
+        }
+      });
+
+      document.getElementById('sheets-pull-btn').addEventListener('click', async () => {
+        const val = sheetsUrlInput.value.trim();
+        if (val) {
+          localStorage.setItem(STORAGE_KEY_SHEETS_URL, val);
+          updateSheetsBadge();
+        }
+        showLoader('Pulling from Google Sheets...');
+        await pullFromGoogleSheets(false);
+        hideLoader();
+        sheetsModal.classList.add('hidden');
+      });
+
+      paperSheet.addEventListener('click', (e) => {
+        if (e.target === paperSheet) {
+          editor.focus();
+          const range = document.createRange();
+          range.selectNodeContents(editor);
+          range.collapse(false);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          saveSelection();
+        }
+      });
+
+      editor.addEventListener('input', () => {
+        saveSelection();
+        updateStats();
+        scheduleSave();
+      });
+      editor.addEventListener('keyup', () => {
+        saveSelection();
+        updateToolbarState();
+      });
+      editor.addEventListener('mouseup', () => {
+        saveSelection();
+        updateToolbarState();
+      });
+      editor.addEventListener('blur', () => {
+        saveSelection();
+      });
+      document.addEventListener('selectionchange', () => {
+        if (document.activeElement === editor) {
+          saveSelection();
+          updateToolbarState();
+        }
+      });
+
+      const exportBtn = document.getElementById('btn-export-menu');
+      const exportMenu = document.getElementById('export-dropdown');
+      exportBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        exportMenu.classList.toggle('hidden');
+      });
+      document.addEventListener('click', () => {
+        exportMenu.classList.add('hidden');
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
+          e.preventDefault();
+          saveActiveDocument();
+          showToast('Saved to iCloud Drive');
+        }
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  </script>
+</body>
+</html>
